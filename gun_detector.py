@@ -111,12 +111,15 @@ def photo_check(frame, width, threshold):
     return len(colors) > threshold
 
 
-def detect_gun(img):
+def detect_gun(img, use_meme=True):
     """
     Use haar cascades to see if a gun is present in a PIL image
     """
-    meme, is_meme = text_check(img, 10)
-    print("MEME:", meme)
+    if use_meme:
+        meme, is_meme = text_check(img, 10)
+        print("MEME:", meme)
+    else:
+        meme, is_meme = "", False
     frame = np.asarray(img)
     is_photo = photo_check(frame, width=100, threshold=4000)
     print(50 * "*")

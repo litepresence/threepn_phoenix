@@ -35,11 +35,15 @@ from config import (
     REPOST,
     RESTART,
     USERS,
+    BAN_INTERVAL
 )
 from gun_detector import detect_gun, download
 from json_ipc import json_ipc
-from telegram_poster import channel_post, get_recent_posts, get_last_post_number
+from telegram_poster import channel_post, get_recent_posts
 from tweet_extractor import get_tweets
+
+# THIRD PARTY MODULES
+from requests import get
 
 
 def initialize_database():
@@ -62,6 +66,63 @@ def initialize_database():
     json_ipc("latest_tweets.txt", json.dumps(latest_tweets))
 
 
+def edit_config(user, users):
+    """
+    edit the configuration file with the new user list
+    create a concise updated user list to pass from scheduler to collector via ipc
+    :param str(user): new user name to add to list
+    :param list(users): old user list
+    :return list(users): updated and sorted user list
+    """
+    users.append(user)
+    users = list(set(users))
+    users.sort()
+    # read config
+    with open("./config.py", "r", encoding="utf-8") as handle:
+        data = handle.read()
+        handle.close()
+    users_1 = data.split("USERS = ")[0]
+    users_2 = json.dumps(users, indent=4)
+    users_3 = data.split("USERS = ", maxsplit=1)[1].split("]", maxsplit=1)[1]
+    users_tw = f"{users_1}# {time.ctime()} {user}\nUSERS = {users_2}{users_3}"
+    # write to config
+    with open("./config.py", "w", encoding="utf-8") as handle:
+        data = handle.write(users_tw)
+        handle.close()
+    # provide updated user list to collector app
+    json_ipc("users.txt", json.dumps(users))
+    return users
+
+
+def bannables():
+    posts = list(set(get_recent_posts(max(BAN_INTERVAL+5, 200), BOT_CHANNEL)))
+    for post in posts:
+        print(post)
+        if post.startswith("/ban"):
+            banned = json_ipc("banned_users.txt", default="[]")
+            banned.append(post.split("/ban ")[1])
+            json_ipc("banned_users.txt", json.dumps(list(set(banned))))
+        if post.startswith("/add"):
+            users = json_ipc("users.txt", default="[]")
+            users.append(post.split("/add ")[1])
+            json_ipc("banned_users.txt", json.dumps(list(set(users))))
+
+
+def scrape_reddit():
+    headers = {
+        "User-Agent":"Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0",
+        "Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language":"en-US,en;q=0.5",
+        "Accept-Encoding":"gzip, deflate, br",
+        "Referer":"https://duckduckgo.com/",
+        "Cookie":"PHPSESSID=421a737e8472d0930c0599f28211772f",
+    }
+    data = get("https://www.reddit.com/r/fosscad/.rss", headers=headers).text
+    data = ["https://www.reddit.com/r/fosscad/comments/" + "/".join(i.split("/")[1:3]) for i in data.split('fosscad/comments') if "www.w3.org" not in i]
+    data = list(set(data))
+    return data
+
+
 def collector():
     """
     gather recent posts from each whitelisted twitter user containing images
@@ -70,23 +131,44 @@ def collector():
     """
     if DEV:
         channel_post(CHANNELS["threepn_bot"], "*** NEW SESSION **" + 3 * "*\n")
-    posted_tweets = []
-    hashed_images = []
+
+    collected_tweets = list(set(json_ipc("collected_tweets.txt", default="[]")))
+    collected_images = list(set(json_ipc("collected_images.txt", default="[]")))
+
+    n_posts = 0
     while True:
         print("\033c")
         print(LOGO)
         print(time.ctime())
+        bannables()
+        if DEPLOY:
+            print("Collecting from reddit...")
+            urls = scrape_reddit()
+            print("done! found", len(urls), "posts.")
+            for udx, url in enumerate(urls):
+                if url not in collected_tweets:
+                    channel_post(CHANNELS[BOT_CHANNEL], url)
+                    collected_tweets.append(url)
+                    json_ipc("collected_tweets.txt", json.dumps(collected_tweets))
+                    time.sleep(DELAY)
+                print(udx, "/", len(urls))
+            collected_tweets = collected_tweets[-1000:]
         now = int(time.time())
         # fetch the database of most recent tweet id's for each user
         latest_tweets = json_ipc("latest_tweets.txt")
         users = list(USERS)
         # the scheduler process may have updated the user list
         users.extend(json_ipc("users.txt", default="[]"))
-
         users = list(set(users))
         shuffle(users)
         # iterate through whitelisted 3dpfa users on twitter
         for user in users:
+            print("Checking if user", user, "is banned...")
+            banned = json_ipc("banned_users.txt", default="[]")
+            if user in banned:
+                print("User", user, "is BANNED!")
+                continue
+            print("User is not banned!")
             try:
                 print(time.ctime())
                 print(f"Getting tweets from user `{user}`...")
@@ -102,13 +184,14 @@ def collector():
                 for tweet in tweets:
                     tweet_id = int(tweet["id"])
                     # prevent duplicates
-                    if tweet_id in posted_tweets:
+                    if tweet_id in collected_tweets:
                         print("tweet_id repeat")
                         continue
 
-                    posted_tweets.append(tweet_id)
-                    posted_tweets = posted_tweets[:1000:]
-                    hashed_images = hashed_images[:1000:]
+                    collected_tweets.append(tweet_id)
+                    collected_tweets = collected_tweets[-1000:]
+                    json_ipc("collected_tweets.txt", json.dumps(collected_tweets))
+
                     # update the latest tweet id for this user
                     if tweet_id > latest_tweets[user]:
                         latest_tweets[user] = tweet_id
@@ -120,15 +203,29 @@ def collector():
                             print(f"Checking tweet image url {image_url} for a gun...")
                             time.sleep(2)
                             # upon finding a gun in twitter post upload to telegram channel
-                            (is_gun, hashed_img, _, _, _, _,) = detect_gun(
-                                download(image_url)
-                            )
-                            if hashed_img in hashed_images:
+                            (
+                                is_gun,
+                                hashed_img,
+                                _,
+                                _,
+                                _,
+                                _,
+                            ) = detect_gun(download(image_url))
+                            # if we've already seen this image break the loop
+                            if hashed_img in collected_images:
                                 print("hashed image repeat")
                                 continue
-                            hashed_images.append(hashed_img)
+                            # otherwise add the image to our collected images hashes
+                            collected_images.append(hashed_img)
+                            collected_images = collected_images[-1000:]
+                            json_ipc(
+                                "collected_images.txt", json.dumps(collected_images)
+                            )
                             if is_gun:
                                 print("Gun found!")
+                                n_posts += 1
+                                if n_posts % BAN_INTERVAL == 0:
+                                    bannables()
 
                                 ret = ""
                                 if DEPLOY:
@@ -145,6 +242,7 @@ def collector():
                                 break
             except Exception as e:
                 print(e.args, e)
+
         # update the database
         latest_tweets["unix"] = now
         json_ipc("latest_tweets.txt", json.dumps(latest_tweets))
@@ -168,75 +266,58 @@ def scheduler():
     """
     users = [u.lower() for u in USERS]
     json_ipc("users.txt", json.dumps(users))
-    posted = []
     while True:
         try:
             # what the bot has posted AND
             # anything recently posted by external call
-            posted = list(
-                set(posted + get_recent_posts(200, MAIN_CHANNEL, post_type="all"))
-            )
+            posted = list(set(json_ipc("posted.txt", default="[]"))) 
             # the previous queue is in queue
             queue = list(set(json_ipc("main_queue.txt", default="[]")))
+            print("1", queue)
             # anything recently whitelisted in the bot channel is new
-            new = list(
-                set(get_recent_posts(200, BOT_CHANNEL, post_type="whitelisted"))
-            )
-            # queue is then updated:
+            new = list(set(get_recent_posts(200, BOT_CHANNEL, post_type="whitelisted")))
             # any new new posts are added to those already in queue
             # any known to have been posted are removed
-            # /vx  will allow for autoplay of video content in telegram
+            print("1.5", new)
             queue.extend(new)
-            queue = list(
-                set(
-                    i.replace("/twitter", "/vxtwitter")
-                    for i in queue
-                    if i not in posted
-                )
-            )
-            # get the most recent post number in the main rooom:
-            last_post = get_last_post_number(MAIN_CHANNEL)
-            # format a message to post in the main channel
-            msg = f"{MSG.split('/t.me/s/')[0]}/t.me/s/{MAIN_CHANNEL}/{last_post + 1}"
-            # shuffle the queue
+            queue = list({i for i in queue if i not in posted})
             shuffle(queue)
+            # update the main queue database list
+            json_ipc("main_queue.txt", json.dumps(queue))
+            print("2", queue)
+            time.sleep(1)
             # if anything remains in queue pop one off the list and post it
             if queue:
                 this_post = queue.pop()
                 # ensure the bot knows it just posted this
-                posted.append(this_post)
+                posted.append(this_post) 
+                # update the posted database list
+                json_ipc("posted.txt", json.dumps(posted))
                 # format a message with the post and boilerplate
-                message = this_post + "\n\n" + msg
+                message = this_post + "\n\n" + MSG
                 # extract and normalize the username
                 user = this_post.split(".com/")[1].split("/status")[0].lower()
-                if user not in users:
+                if user not in users and "r/fosscad" not in user:
                     # announce the new user to main channel
                     message += f"\n\nFollowing New 3PN Gunsmith on Twitter: {user}"
                     # update and sort the user list
-                    users.append(user)
-                    users = list(set(users))
-                    users.sort()
-                    # edit the configuration file with the new user list
-                    with open("./config.py", "r", encoding="utf-8") as handle:
-                        data = handle.read()
-                        handle.close()
-                    users_1 = data.split("USERS = ")[0]
-                    users_2 = json.dumps(users, indent=4)
-                    users_3 = data.split("USERS = ", maxsplit=1)[1].split("]", maxsplit=1)[1]
-                    users_tw = f"{users_1}# {time.ctime()} {user}\nUSERS = {users_2}{users_3}"
-                    with open("./config.py", "w", encoding="utf-8") as handle:
-                        data = handle.write(users_tw)
-                        handle.close()
-                    # edit the inter process communication file with the new user list
-                    json_ipc("users.txt", json.dumps(users))
-                channel_post(CHANNELS[MAIN_CHANNEL], message)
+                    users = edit_config(user, users)
+                # post this message to the main channel
+                ret = channel_post(CHANNELS[MAIN_CHANNEL], message)
+                if not ret["ok"]:
+                    # If telegram says things are NOT ok, then try again and log
+                    posted.pop(-1)
+                    json_ipc("posted.txt", json.dumps(posted))
+                    print("POSTING TO CHANNEL FAILED WITH ERROR:")
+                    print(ret)
+                    time.sleep(2)
+                print(CHANNELS[MAIN_CHANNEL], message)
+                # time.sleep(10)
             else:
                 this_post = ""
-                message = ""
-            # either way update the queue with the latest queue
-            json_ipc("main_queue.txt", json.dumps(queue))
+                message = "WARN: NO POSTS IN QUEUE"
+            # display bot status
             print("\033c")
-            print("last post", last_post)
             print("queue:\n", len(queue), queue)
             print("new:\n", len(new), new)
             print("posted:\n", len(posted), posted)
@@ -244,8 +325,10 @@ def scheduler():
             print(message)
             print(time.ctime())
             time.sleep(REPOST)
-        except:
+        except Exception as error:
+            print(error.args)
             time.sleep(10)
+
 
 
 def reposter(function):
@@ -270,10 +353,9 @@ def reposter(function):
                     channel_post(CHANNELS[endpoint], post)
 
 
-def main():
-    """
 
-    """
+def main():
+    """."""
 
     args = argv[1::]
     if args:

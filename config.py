@@ -38,6 +38,7 @@ CHANNELS = {
 }
 BOT_CHANNEL = "threepn_bot"
 MAIN_CHANNEL = "threepn_phoenix"
+
 FOLLOW = [  # post to the bot channel
     "mrgunsngear",
     #"printersdeals",
@@ -55,12 +56,13 @@ CROP = 0  # take only the first CROP from list of USERS; 0 for all
 DAYS = 7  # days to look back in time on what has been posted upon initialization
 DELAY = 5 # between external calls
 DEPTH = 50 # tweets to look back for each twitter user
-REPOST = 7200  # seconds between posts to main channel
+REPOST = 3600  # seconds between posts to main channel
+BAN_INTERVAL = 20
 
 MSG = (  # message header for telegram post
-    "JOIN @threepn_phoenix\n"
-    + "*** BACKUP @the_gatalog NOW ***\n"
-    + "https://t.me/s/threepn_phoenix/30000001765"
+    "3D PRINTING NATION'S PHOENIX\n"
+    + "Where Free Men Arise to Arm Themselves\n\n"
+    + "JOIN https://t.me/the_gatalog"
 )
 
 
@@ -121,23 +123,79 @@ MSG = (  # message header for telegram post
 # Sun Oct 16 04:32:48 2022 lcultivated
 # Wed Oct 19 01:15:29 2022 shackleford_777
 # Thu Oct 20 05:33:09 2022 defcad
+# Fri Oct 21 22:58:08 2022 agcast4
+# Sat Oct 22 17:05:09 2022 mhmiranusa
+# Wed Oct 26 00:33:54 2022 kylejengel4
+# Fri Oct 28 12:23:54 2022 u8onetu
+# Sat Oct 29 10:30:43 2022 slamdan88
+# Sat Oct 29 20:39:10 2022 4doorsmorehore
+# Sun Oct 30 16:45:21 2022 stephenberkner
+# Sun Nov  6 20:39:29 2022 _evan__jones_
+# Mon Nov  7 20:46:58 2022 n1ghttr4c3
+# Mon Nov 14 07:14:14 2022 maybeblanks
+# Wed Nov 16 21:36:54 2022 skate_n_thrash
+# Thu Nov 24 21:03:37 2022 bulletholz
+# Sat Nov 26 09:14:43 2022 liberty17766
+# Tue Dec  6 00:27:07 2022 jake_hanrahan
+# Fri Dec 16 01:45:40 2022 heavenlyf33t
+# Sun Jan 22 12:44:01 2023 2a3dprint
+# Sun Jan 22 16:45:17 2023 photonray1
+# Mon Jan 23 16:53:53 2023 jamesstout
+# Wed Jan 25 13:07:39 2023 zoopyloops
+# Fri Mar  3 15:33:41 2023 mafcorporation
+# Sat Mar  4 01:09:17 2023 dinimbuslabs
+# Sat Mar  4 05:10:46 2023 family_joules3d
+# Sat Mar  4 07:11:30 2023 the_aveees
+# Sat Mar  4 23:17:24 2023 doubleclutch229
+# Tue Mar  7 13:40:47 2023 neutron__nick
+# Wed Mar  8 19:51:14 2023 wishappfuelfltr
+# Thu Mar  9 03:54:11 2023 yzy_prints
+# Thu Mar  9 11:57:08 2023 rightsofrefusal
+# Thu Mar  9 20:00:08 2023 danny_meatball
+# Sat Mar 11 00:11:44 2023 josephtheparrot
+# Sun Mar 12 09:22:47 2023 tacticalhandle
+# Sun Mar 12 15:24:46 2023 marconiarmory
+# Tue Mar 14 01:35:44 2023 shadzey1
+# Tue Mar 14 16:00:04 2023 chrono52
+# Tue Mar 14 18:00:50 2023 leoprecision
+# Wed Mar 15 13:04:43 2023 digitalspaz
+# Wed Mar 15 15:05:29 2023 austinreas
+# Fri Mar 17 05:19:53 2023 balaclavaboi69
+# Fri Mar 17 09:21:26 2023 tacticalxr
+# Sat Mar 18 11:35:21 2023 r/fosscad/comments/11u5ika/sudy_2352_is_live/
+# Sat Mar 18 17:37:38 2023 r/fosscad/comments/11tcagj/testing_1_of_2_rainbow_pla_filaments/
+# Sun Mar 19 05:42:13 2023 r/fosscad/comments/11u64hs/2_thickness_5_density_fuzzy_skin_printed_in_1/
+# Sun Mar 19 09:43:45 2023 r/fosscad/comments/11ttq4w/commence_project_amigo/
+# Sun Mar 19 13:45:17 2023 r/fosscad/comments/11v9tfg/faux_wood_using_copic_ink_refills_damn_near/
+# Sun Mar 19 17:46:49 2023 r/fosscad/comments/11v71lw/built_my_first_ar_today/
+# Sun Mar 19 19:47:36 2023 scsupermoto
+# Sun Mar 19 21:48:21 2023 r/fosscad/comments/11v36u4/baby_banger_shorty_pipe_hitter_37mm_and/
+# Mon Mar 20 01:49:53 2023 r/fosscad/comments/11uw2g6/jus_need_a_gen_5_slide_lock_spring/
+# Mon Mar 20 13:54:29 2023 jefedej63847622
+# Mon Mar 20 23:08:36 2023 freerosswoodwrk
 USERS = [
     "0101xtmd",
     "10spanky1",
     "1plus2equals3d",
+    "2a3dprint",
     "2acountrycouple",
     "3d_amendment",
     "3d_oa",
     "3dnrn",
     "3dprintgeneral",
     "3dyour2a",
+    "4doorsmorehore",
+    "_evan__jones_",
+    "agcast4",
     "albert9x19",
     "archie_2aprint",
     "armedj0y",
     "arthurclaudeen",
+    "austinreas",
     "autunite1878",
     "avesrails",
     "awcy_arms",
+    "balaclavaboi69",
     "beaneronline",
     "bigtangringo",
     "blackrosewolf2",
@@ -148,10 +206,12 @@ USERS = [
     "boracho20",
     "bowtiedankylo",
     "brokenbulletz",
+    "bulletholz",
     "bumpybigloo",
     "cathode_g",
     "catsprayallday",
     "chairmanwon",
+    "chrono52",
     "chuck_your_guru",
     "clonewar1",
     "cnc_kitchen",
@@ -162,11 +222,14 @@ USERS = [
     "ctrlpew2",
     "daddywarbux3",
     "daikondefense",
+    "danny_meatball",
     "darkscarecrow22",
     "de_faultt",
     "defcad",
     "dianexis",
     "digitalnimbus_",
+    "digitalspaz",
+    "dinimbuslabs",
     "dirtyjobsinre",
     "dispensedparts",
     "dissidentrexy",
@@ -174,10 +237,12 @@ USERS = [
     "doctorwhip",
     "dogenado_exe",
     "dootdefense",
+    "doubleclutch229",
     "drdeath1776",
     "eaglerun23",
     "edc208",
     "elatedpariah",
+    "family_joules3d",
     "fedplots",
     "ferretpass",
     "ffftechnology",
@@ -185,6 +250,7 @@ USERS = [
     "fmda1776",
     "foobadoo1",
     "freeman13372",
+    "freerosswoodwrk",
     "fuckleberry90",
     "geraldkatz9",
     "ghostgunnews",
@@ -195,6 +261,7 @@ USERS = [
     "guttercheese",
     "hamhawkfirearms",
     "happylandwrkshp",
+    "heavenlyf33t",
     "hoffmantactical",
     "huntereatschalk",
     "incel_gamer",
@@ -203,26 +270,38 @@ USERS = [
     "iprintgunz",
     "itsreallyjason",
     "jaegercompny",
+    "jake_hanrahan",
+    "jamesstout",
     "jc_arms",
+    "jefedej63847622",
     "jerrycurld",
     "jnyboy",
+    "josephtheparrot",
     "kadecad1",
     "klaviermeister2",
     "km3d3",
     "krrawn",
     "krus_chiki",
     "kyelermorgan",
+    "kylejengel4",
     "kyleprintspews",
     "laffs_dynamics",
     "lcultivated",
     "legsenergy",
+    "leoprecision",
+    "liberty17766",
     "liberty_jedi",
+    "litepresence/threepn_phoenix",
     "lopointgoat",
     "louisvillegun",
+    "mafcorporation",
     "mainemike79",
     "makerrezzy",
+    "marconiarmory",
     "mattyboyyyyy",
+    "maybeblanks",
     "menendez3d",
+    "mhmiranusa",
     "minty_pass",
     "mirrorlessj",
     "mnyenemymuchhnr",
@@ -231,8 +310,10 @@ USERS = [
     "mrjmezz",
     "mrninjaburg",
     "mrsnow_makes",
+    "n1ghttr4c3",
     "napalmrising",
     "navigoboom",
+    "neutron__nick",
     "nguyenkvvn",
     "nickdoff23",
     "nickmunny",
@@ -244,6 +325,7 @@ USERS = [
     "pancreasthief",
     "pewtang",
     "phil_phisher",
+    "photonray1",
     "pimtooll",
     "pincusrob",
     "plastikgatz",
@@ -264,26 +346,35 @@ USERS = [
     "realquietbryan",
     "ricecutta0",
     "ricky2a3d",
+    "rightsofrefusal",
     "riptiderails",
     "rkneegrow",
     "rkspookware",
     "robert7075307",
     "sabrprints",
     "samizdat_steve",
+    "scsupermoto",
     "sdi_school",
     "shackleford_777",
+    "shadzey1",
     "simplyhuffy",
+    "skate_n_thrash",
+    "slamdan88",
     "smokiemcagee",
     "spacebound3dp",
     "spooky3dpg",
     "spottydraft",
     "ssgtkotyk",
     "stayfree3dp",
+    "stephenberkner",
     "stevekreitler",
     "stfudvs",
     "suckboytony1",
+    "tacticalhandle",
+    "tacticalxr",
     "tedyheremc",
     "thathicks",
+    "the_aveees",
     "the_frost_boss",
     "the_zer0fux",
     "thebattlecock",
@@ -292,15 +383,19 @@ USERS = [
     "timeoutwithtl",
     "trophy_trout",
     "tryvngle",
+    "u8onetu",
     "uberpoor",
     "upndownthewatr",
     "vega_holdings",
     "vegancokehead69",
     "walrus_pajamas",
+    "wishappfuelfltr",
     "xaniken",
     "xyeezyszn",
     "yeezy_prints",
     "youmaycall_me_v",
+    "yzy_prints",
+    "zoopyloops",
     "zuccthis"
 ]
 

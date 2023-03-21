@@ -59,9 +59,9 @@ def send_request(url, session_method, headers, params=None):
     if response.status_code != 200:
         print(response.request.url)
         print(response.status_code)
-    assert response.status_code == 200, (
-        f"Failed request to {url}.  {response.status_code}.  " + ISSUE
-    )
+    assert (
+        response.status_code == 200
+    ), f"Failed request to {url}.  {response.status_code}.  {ISSUE}"
     result = [line.decode("utf-8") for line in response.iter_lines()]
     return "".join(result)
 
@@ -263,8 +263,8 @@ def get_user_id(session, headers, query_id, username):
     try:
         ids = ID_PATTERN.findall(resp)
         counts = COUNT_PATTERN.findall(resp)
-        assert len(ids) == 1, f"Failed to find user id for {username}.  " + ISSUE
-        assert len(counts) == 1, f"Failed to find tweet count for {username}.  " + ISSUE
+        assert len(ids) == 1, f"Failed to find user id for {username}.  {ISSUE}"
+        assert len(counts) == 1, f"Failed to find tweet count for {username}.  {ISSUE}"
         return ids[0]
     except Exception:
         return 0
@@ -295,7 +295,7 @@ def create_backdoor(username):
         if len(query_op) == 1:
             query_id = re.findall('queryId:"([^"]+)"', query_op[0])[0]
         if bt:
-            bearer_token = bt.group(1)
+            bearer_token = bt[1]
         ops = re.findall(
             r'\{queryId:"[a-zA-Z0-9_]+[^\}]+UserByScreenName"', file_content
         )
@@ -304,20 +304,19 @@ def create_backdoor(username):
             user_query_id = re.findall('queryId:"([^"]+)"', user_query_op[0])[0]
     # confirm we have a bearer token, query_id, and user_query_id
     msg = f"Are you sure you used the right username? {username}"
-    assert bearer_token, "Did not find bearer token.  " + msg
-    assert query_id, "Did not find query id.  " + msg
-    assert user_query_id, "Did not find user query id.  " + msg
+    assert bearer_token, f"Did not find bearer token.  {msg}"
+    assert query_id, f"Did not find query id.  {msg}"
+    assert user_query_id, f"Did not find user query id.  {msg}"
     # get a guest token given a bearer token
     headers["authorization"] = f"Bearer {bearer_token}"
     guest_token_resp = send_request(GUEST_TOKEN_ENDPOINT, session.post, headers)
     guest_token = json.loads(guest_token_resp)["guest_token"]
-    assert guest_token, (
-        f" Username {username} did not find guest token.  Script is broken.  " + ISSUE
-    )
+    assert (
+        guest_token
+    ), f" Username {username} did not find guest token.  Script is broken.  {ISSUE}"
     headers["x-guest-token"] = guest_token
 
-    user_id = get_user_id(session, headers, user_query_id, username)
-    if user_id:
+    if user_id := get_user_id(session, headers, user_query_id, username):
         variables["userId"] = user_id
     else:
         variables["userId"] = USERS[username]

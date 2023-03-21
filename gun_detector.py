@@ -51,7 +51,7 @@ def display(true, false, frame):
                 1,
                 (0, 255, 0),
             )
-    for idx, i in enumerate(false):
+    for i in false:
         for (x, y, w, h) in false[i]:
             frame = cv2.ellipse(
                 frame, center, (w // 2, h // 2), 0, 0, 360, (128, 0, 128), 4
@@ -77,7 +77,7 @@ def multi_haar(cascades, gray_scale, bool_check):
     ret = {}
     for cascade_file in cascades:
         try:
-            classifier = cv2.CascadeClassifier("haar/" + cascade_file)
+            classifier = cv2.CascadeClassifier(f"haar/{cascade_file}")
             spots = classifier.detectMultiScale(gray_scale, 1.3, 5, minSize=(100, 100))
             detected = bool(len(spots))
             if detected:
@@ -123,11 +123,11 @@ def detect_gun(img, use_meme=True):
     frame = np.asarray(img)
     is_photo = photo_check(frame, width=100, threshold=4000)
     print(50 * "*")
-    print(f"IS MEME")
+    print("IS MEME")
     print(50 * "*")
     print(is_meme)
     print(50 * "*")
-    print(f"IS PHOTO")
+    print("IS PHOTO")
     print(50 * "*")
     print(is_photo)
     print(50 * "*")
@@ -151,7 +151,7 @@ def detect_gun(img, use_meme=True):
 
     thumbnail = str(imutils.resize(frame, width=100))
     hashed_img = hashlib.sha256(thumbnail.encode("utf-8")).hexdigest()
-    is_gun = any(true_cascades) and sum([int(b) for b in false_cascades]) <= 2
+    is_gun = any(true_cascades) and sum(int(b) for b in false_cascades) <= 2
     print("is_gun", is_gun, hashed_img)
     return (
         is_gun,

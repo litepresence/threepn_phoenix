@@ -27,6 +27,7 @@ Configuration File
 WTFPL litepresence 2021
 """
 
+
 # token from the @botfather
 TOKEN = ""
 
@@ -52,7 +53,6 @@ DEV = True  # additional printing
 DEPLOY = True  # True to post to telegram
 DISPLAY = False  # Display haar results
 RESTART = False  # Delete database and start fresh
-CROP = 0  # take only the first CROP from list of USERS; 0 for all
 DAYS = 7  # days to look back in time on what has been posted upon initialization
 DELAY = 5 # between external calls
 DEPTH = 50 # tweets to look back for each twitter user
@@ -428,6 +428,6 @@ FALSE_CASCADES = [
     # "cascade_cats.xml",
     "cascade_cars.xml",
 ]
-if CROP:
+if CROP := 0:
     USERS = USERS[:CROP:]
 LOGO = __doc__.split("<logo>")[0]

@@ -25,14 +25,13 @@ def channel_post(channel, message):
     post a message to telegram
     """
     time.sleep(2)
-    uri = "https://api.telegram.org/bot"
     endpoint = "/sendMessage"
     params = {
         "chat_id": channel,
         "text": message,
         "Markdown": True,
     }
-    url = uri + TOKEN + endpoint
+    url = f"https://api.telegram.org/bot{TOKEN}{endpoint}"
     return requests.get(url, params=params).json()
 
 
@@ -45,12 +44,7 @@ def get_raw_data(room, post_id):
     url = f"https://t.me/s/{room}/{post_id}"
     print(url)
     time.sleep(2)
-    ret =  requests.get(url).text
-    # try:
-    #     print(ret.split("/ban")[0][-150:])
-    # except:
-    #     pass
-    return ret
+    return requests.get(url).text
 
 
 
@@ -79,7 +73,12 @@ def get_posts_from(room, post_id):
     """
     ret = get_raw_data(room, post_id)
     posts = ret.split('<div class="tgme_widget_message_text js-message_text" dir="auto">')
-    posts = [i.split('>')[0].split('" target="_blank"')[0][9:] if "http://" in i.split(">")[0] or "https://" in i.split(">")[0] else i.split(">")[0][0:-5] for i in posts]
+    posts = [
+        i.split('>')[0].split('" target="_blank"')[0][9:]
+        if "http://" in i.split(">")[0] or "https://" in i.split(">")[0]
+        else i.split(">")[0][:-5]
+        for i in posts
+    ]
 
     # print(posts)
     posts.pop(0)

@@ -108,10 +108,10 @@ def main():
         choice = 1
     choice = int(choice)
     disabled = ""
-    if choice in [1, 3]:
+    if choice in {1, 3}:
         disabled = "--enable=all --disable="
         for item in DISABLE:
-            disabled += item + ","
+            disabled += f"{item},"
         disabled.rstrip(",")
     # Get the start time
     start = time()
@@ -121,7 +121,7 @@ def main():
     pythons = [f for f in os.listdir() if f.endswith(".py") and f != "black_all.py"]
     # pythons = [f for f in os.listdir() if f in ONLY]
     # For every file in that list:
-    if choice in [1, 2, 5]:
+    if choice in {1, 2, 5}:
         for name in pythons:
             # Print the script we are blacking.
             print("Blacking script:", name)
@@ -135,7 +135,7 @@ def main():
         auto_enumerate(name)
     for name in pythons:
         auto_broad_except(name)
-    if choice in [1, 2, 3, 4]:
+    if choice in {1, 2, 3, 4}:
         for name in pythons:
             # Print the script we are blacking.
             print("Pylinting script:", name)

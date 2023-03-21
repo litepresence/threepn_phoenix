@@ -11,11 +11,12 @@ def get_vids(n_posts=10, username="3d printed guns"):
     posts = []
     ret = get_data(int(n_posts), username)
     for url in ret:
-        n_post = {}
-        n_post["id"] = ret[url][2]
-        n_post["unix"] = ret[url][1]
-        n_post["images"] = ret[url][0]
-        n_post["url"] = url
+        n_post = {
+            "id": ret[url][2],
+            "unix": ret[url][1],
+            "images": ret[url][0],
+            "url": url,
+        }
         posts.append(n_post)
     print(posts)
     return posts
@@ -86,7 +87,7 @@ def get_data(pages=1, search="3d printed guns"):
                     .split("views")[0]
                     .split()[:2]
                 )
-                if "Streamed" == agos[0]:
+                if agos[0] == "Streamed":
                     # FIXME: There should be SOME way to deal with these
                     continue
                     # print(agos)

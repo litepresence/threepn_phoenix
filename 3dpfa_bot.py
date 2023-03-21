@@ -75,8 +75,7 @@ def edit_config(user, users):
     :return list(users): updated and sorted user list
     """
     users.append(user)
-    users = list(set(users))
-    users.sort()
+    users = sorted(set(users))
     # read config
     with open("./config.py", "r", encoding="utf-8") as handle:
         data = handle.read()
@@ -357,8 +356,7 @@ def reposter(function):
 def main():
     """."""
 
-    args = argv[1::]
-    if args:
+    if args := argv[1::]:
         dispatch = {
             "--scheduler": Thread(target=scheduler),
             "--collector": Thread(target=collector),

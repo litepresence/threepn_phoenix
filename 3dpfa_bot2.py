@@ -184,11 +184,11 @@ def scheduler():
             # /vx  will allow for autoplay of video content in telegram
             queue.extend(new)
             queue = list(
-                set(
+                {
                     i.replace("/twitter", "/vxtwitter")
                     for i in queue
                     if i not in posted
-                )
+                }
             )
             # get the most recent post number in the main rooom:
             last_post = get_last_post_number(MAIN_CHANNEL)
@@ -210,8 +210,7 @@ def scheduler():
                     message += f"\n\nFollowing New 3PN Gunsmith on Twitter: {user}"
                     # update and sort the user list
                     users.append(user)
-                    users = list(set(users))
-                    users.sort()
+                    users = sorted(set(users))
                     # edit the configuration file with the new user list
                     with open("./config.py", "r", encoding="utf-8") as handle:
                         data = handle.read()
@@ -271,8 +270,7 @@ def main():
 
     """
 
-    args = argv[1::]
-    if args:
+    if args := argv[1::]:
         dispatch = {
             "--scheduler": Thread(target=scheduler),
             "--collector": Thread(target=collector),

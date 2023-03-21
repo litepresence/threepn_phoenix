@@ -25,14 +25,13 @@ def channel_post(channel, message):
     post a message to telegram
     """
     time.sleep(2)
-    uri = "https://api.telegram.org/bot"
     endpoint = "/sendMessage"
     params = {
         "chat_id": channel,
         "text": message,
         "Markdown": True,
     }
-    url = uri + TOKEN + endpoint
+    url = f"https://api.telegram.org/bot{TOKEN}{endpoint}"
     return requests.get(url, params=params).json()
 
 
@@ -73,8 +72,15 @@ def get_posts_from(room, post_id):
     last 20 of all tgme_widget_message_link_preview
     """
     ret = get_raw_data(room, post_id)
-    posts = ret.split('<a class="tgme_widget_message_link_preview" href="')
-    posts = [i.split('">')[0] for i in posts]
+    posts = ret.split('<div class="tgme_widget_message_text js-message_text" dir="auto">')
+    posts = [
+        i.split('>')[0].split('" target="_blank"')[0][9:]
+        if "http://" in i.split(">")[0] or "https://" in i.split(">")[0]
+        else i.split(">")[0][:-5]
+        for i in posts
+    ]
+
+    # print(posts)
     posts.pop(0)
     return posts
 
@@ -85,6 +91,7 @@ def get_forwards_from(room, post_id):
     """
     try:
         ret = get_raw_data(room, post_id)
+        # print(ret)
         posts = ret.split("tgme_widget_message_forwarded_from")
         posts = [i.split("</time>")[0] for i in posts]
         posts.pop(0)
